@@ -4,6 +4,7 @@ import {
   setupGlobalErrorListener,
 } from '@commercetools-frontend/application-shell';
 import loadMessages from '../../load-messages';
+import TinyEditor from '../Tinymce';
 
 // Here we split up the main (app) bundle with the actual application business logic.
 // Splitting by route is usually recommended and you can potentially have a splitting
@@ -18,6 +19,7 @@ setupGlobalErrorListener();
 
 const EntryPoint = () => (
   <CustomViewShell enableReactStrictMode applicationMessages={loadMessages}>
+    <TinyEditor/>
     <AsyncApplicationRoutes />
   </CustomViewShell>
 );
