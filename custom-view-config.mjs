@@ -2,15 +2,33 @@
  * @type {import('@commercetools-frontend/application-config').ConfigOptionsForCustomView}
  */
 const config = {
-  name: 'My Temp Folder',
+  name: 'ct-tiny-mce',
   cloudIdentifier: 'gcp-au',
+  headers: {
+    csp: {
+      'connect-src': ['self', 'http://localhost:3001', '*.tiny.cloud'],
+      'script-src': ['self', '*.tiny.cloud'],
+      'style-src': [
+        'self',
+        '*.googleapis.com',
+        'unsafe-inline',
+        '*.tiny.cloud',
+      ],
+      'font-src': [
+        'self',
+        'https://fonts.gstatic.com',
+        'unsafe-inline',
+        '*.tiny.cloud',
+      ],
+    },
+  },
   env: {
     development: {
       initialProjectKey: 'tiny_mc_demo',
     },
     production: {
-      customViewId: 'TODO',
-      url: 'https://my-custom-view.com',
+      customViewId: '${env: CUSTOM_VIEW_ID}',
+      url: '${env: CUSTOM_VIEW_URL}',
     },
   },
   oAuthScopes: {
