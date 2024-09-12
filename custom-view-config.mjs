@@ -25,6 +25,8 @@ const config = {
   env: {
     development: {
       initialProjectKey: 'tiny_mc_demo',
+      hostUriPath:
+        '/tiny_mc_demo/products/044434cc-8de6-47ff-a307-51116c47a8e9',
     },
     production: {
       customViewId: '${env: CUSTOM_VIEW_ID}',
