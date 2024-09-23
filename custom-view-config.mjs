@@ -33,6 +33,7 @@ const config = {
       url: '${env: CUSTOM_VIEW_URL}',
     },
   },
+  locators: ['products.product_details.general'],
   oAuthScopes: {
     view: ['view_products'],
     manage: ['manage_products'],
