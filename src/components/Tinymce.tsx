@@ -8,12 +8,16 @@ import { useApplicationContext } from '@commercetools-frontend/application-shell
 export default function TinyEditor() {
     // Fetch productId from the URL
     const productId = window.location.href.split('/').pop() || '';
+    console.log("productID",productId)
     // const hardcodedProductId = '9eb16815-46ae-4500-96b2-6a961bc61845';
     const context = useApplicationContext();
 
     const locale=context?.dataLocale|| ''
+    console.log("Locale",locale)
 
     const { productDescription, loading, error } = useProductDescription(productId,locale); 
+    console.log("productDecription",productDescription)
+    console.log("error",error)
 
     const [editorContent, setEditorContent] = useState(''); 
 
