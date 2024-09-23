@@ -8,9 +8,8 @@ import { useApplicationContext, useCustomViewContext } from '@commercetools-fron
 export default function TinyEditor() {
     // Fetch productId from the URL
     const context1=useCustomViewContext();
-    console.log("context1",context1)
-    console.log(window.location.href)
-    const productId = window.location.href.split("products/")[1]
+    console.log("context1",context1.hostUrl)
+    const productId = context1.hostUrl.split("products/")[1]
     console.log("productID",productId)
     // const hardcodedProductId = '9eb16815-46ae-4500-96b2-6a961bc61845';
     const context = useApplicationContext();
