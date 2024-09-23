@@ -11,7 +11,7 @@ export default function TinyEditor() {
     console.log("productID",productId)
     // const hardcodedProductId = '9eb16815-46ae-4500-96b2-6a961bc61845';
     const context = useApplicationContext();
-
+    console.log("context",context)
     const locale=context?.dataLocale|| ''
     console.log("Locale",locale)
 
