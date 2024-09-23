@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 
 import { useProductDescription } from '../hooks/use-production-description';
-import { useApplicationContext } from '@commercetools-frontend/application-shell-connectors';
+import { useApplicationContext, useCustomViewContext } from '@commercetools-frontend/application-shell-connectors';
 
 
 export default function TinyEditor() {
     // Fetch productId from the URL
+    const context1=useCustomViewContext();
+    console.log("context1",context1)
     console.log(window.location.href)
     const productId = window.location.href.split("products/")[1]
     console.log("productID",productId)
