@@ -1,6 +1,8 @@
 import { Editor } from '@tinymce/tinymce-react';
 export default function TinyEditor() {
     return (
+        <>
+        <h4>Product Description</h4>
         <Editor
             apiKey='ny5v4ltgkfef1txqx9nyhhb6q719gpwbkxrgc9ilxlu846d1'
             init={{
@@ -22,5 +24,6 @@ export default function TinyEditor() {
             }}
             initialValue="Welcome to TinyMCE!"
         />
+        </>
     );
 }
