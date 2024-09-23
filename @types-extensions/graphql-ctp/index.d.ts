@@ -16,6 +16,13 @@ declare module '*/fetch-channels.ctp.graphql' {
 
   export default defaultDocument;
 }
+declare module '*/fetch-product-description.ctp.graphql' {
+  import { DocumentNode } from 'graphql';
+  const defaultDocument: DocumentNode;
+  export const FetchProductDescription: DocumentNode;
+
+  export default defaultDocument;
+}
 
 declare module '*/update-channel-details.ctp.graphql' {
   import { DocumentNode } from 'graphql';

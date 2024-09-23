@@ -1,0 +1,10 @@
+query FetchProductDescription($productId: String!, $locale: Locale!) {
+  product(id: $productId) {
+    id
+    masterData {
+      current {
+        description(locale: $locale) 
+      }
+    }
+  }
+}
