@@ -8,11 +8,11 @@ import { ContentNotification } from '@commercetools-uikit/notifications';
 import { usePublishProduct } from '../hooks/use-publish-product';
 export default function TinyEditor() {
     const context1 = useCustomViewContext();
-    // const productId = context1.hostUrl.split("products/")[1]
-    const hardcodedProductId = '9eb16815-46ae-4500-96b2-6a961bc61845';
+    const productId = context1.hostUrl.split("products/")[1]
+    // const hardcodedProductId = '9eb16815-46ae-4500-96b2-6a961bc61845';
     const context = useApplicationContext();
     const locale = context?.dataLocale || '';
-    const { productDescription, productVersion, loading, error } = useProductDescription(hardcodedProductId, locale);
+    const { productDescription, productVersion, loading, error } = useProductDescription(productId, locale);
     const { updateDescription, loading: updating, error: updateError } = useUpdateProductDescription(); 
     const { publish, loading: publishLoading, error: publishError } = usePublishProduct();  // Use the publish hook
     console.log("===",publishError)
@@ -38,7 +38,7 @@ export default function TinyEditor() {
     const handleSave = async () => {
         if (productVersion !== undefined) {  
             try {
-                await updateDescription(hardcodedProductId, productVersion, locale, editorContent);  
+                await updateDescription(productId, productVersion, locale, editorContent);  
                 setShowSuccessNotification(true);
                 setShowErrorNotification(false);  
             } catch (err) {
@@ -55,7 +55,7 @@ export default function TinyEditor() {
     const handlePublish = async () => {
         if (productVersion !== undefined) {
             try {
-                const result = await publish(hardcodedProductId, productVersion);  // Call publish mutation
+                const result = await publish(productId, productVersion);  // Call publish mutation
                 console.log("Publish result:", result);  // Log the result for debugging
                 setShowPublishSuccess(true);
                 setShowPublishError(false);
