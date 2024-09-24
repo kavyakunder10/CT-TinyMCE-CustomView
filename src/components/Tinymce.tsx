@@ -136,8 +136,8 @@ export default function TinyEditor() {
             />
 
             <PrimaryButton
-                style={{ marginTop: "10px", marginLeft: "10px" }}
-                label="Publish"
+                style={{ marginTop: "10px", marginLeft: "10px", backgroundColor:"green" }}
+                label={showPublishSuccess?"Published":"Publish"}
                 onClick={handlePublish}
                 isDisabled={false}
             />
