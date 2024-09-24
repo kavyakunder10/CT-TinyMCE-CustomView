@@ -59,6 +59,9 @@ export default function TinyEditor() {
                 console.log("Publish result:", result);  // Log the result for debugging
                 setShowPublishSuccess(true);
                 setShowPublishError(false);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } catch (err) {
                 console.error("Publish error:",err);  // Log the detailed error
                 setShowPublishError(true);
