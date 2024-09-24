@@ -7,6 +7,7 @@ import FetchProductDescriptionQuery from './fetch-product-description.ctp.graphq
 type TProductDescriptionQuery = {
   product: {
     id: string;
+    version: number; // Add the version field type
     masterData: {
       current: {
         description: string;
@@ -21,6 +22,7 @@ type TUseProductDescription = (
   locale?: string
 ) => {
   productDescription?: string;
+  productVersion?: number; // Add productVersion type to the return object
   error?: ApolloError;
   loading: boolean;
 };
@@ -40,8 +42,10 @@ export const useProductDescription: TUseProductDescription = (
     }
   );
 
+  // Return productDescription and productVersion
   return {
     productDescription: data?.product?.masterData?.current?.description || '',
+    productVersion: data?.product?.version, // Return product version here
     error,
     loading,
   };

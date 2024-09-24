@@ -1,9 +1,10 @@
 query FetchProductDescription($productId: String!, $locale: Locale!) {
   product(id: $productId) {
     id
+    version # Add version field here
     masterData {
       current {
-        description(locale: $locale) 
+        description(locale: $locale)
       }
     }
   }

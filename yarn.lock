@@ -2132,7 +2132,7 @@
     history "4.10.1"
     prop-types "15.8.1"
 
-"@commercetools-uikit/loading-spinner@19.11.0", "@commercetools-uikit/loading-spinner@^19.9.0":
+"@commercetools-uikit/loading-spinner@19.11.0", "@commercetools-uikit/loading-spinner@^19.11.0", "@commercetools-uikit/loading-spinner@^19.9.0":
   version "19.11.0"
   resolved "https://registry.yarnpkg.com/@commercetools-uikit/loading-spinner/-/loading-spinner-19.11.0.tgz#3f4ea7b0314c69747dc94db1aff99b1120615da1"
   integrity sha512-q6r8/S3nD4j4Afef1Sod/hgmSiAFaoWjzQNM2KC5QuxvdpGI3vVVEMOyrplcq1mpbTEiugnSB9foPQibNPe+Tg==
@@ -2214,7 +2214,7 @@
     prop-types "15.8.1"
     react-intl "^6.3.2"
 
-"@commercetools-uikit/notifications@^19.9.0":
+"@commercetools-uikit/notifications@^19.11.0", "@commercetools-uikit/notifications@^19.9.0":
   version "19.11.0"
   resolved "https://registry.yarnpkg.com/@commercetools-uikit/notifications/-/notifications-19.11.0.tgz#27f7201144f299b4057c7f0ff24f4bf1a646137b"
   integrity sha512-eSxrh/dBQ+ImHtQcsmaIMC0naakn7lrXgw6XzxH5If+/RdecslTQRUk7SQ6PVcJxx9eeoJUs+towHQUZeyyK6A==
@@ -2266,7 +2266,7 @@
     lodash "4.17.21"
     prop-types "15.8.1"
 
-"@commercetools-uikit/primary-button@19.11.0", "@commercetools-uikit/primary-button@^19.9.0":
+"@commercetools-uikit/primary-button@19.11.0", "@commercetools-uikit/primary-button@^19.11.0", "@commercetools-uikit/primary-button@^19.9.0":
   version "19.11.0"
   resolved "https://registry.yarnpkg.com/@commercetools-uikit/primary-button/-/primary-button-19.11.0.tgz#eaf1aca9e68c21ad0cbd4d3061c7af64d443e0a0"
   integrity sha512-EOierP+F+cOsp0dacIBACX0QA6N4tmPAg5sRy5DLgRPPWIfxhzqxjYUDGzFp3cXH01kCRSdPDWQJHu/D0iN2Gw==
