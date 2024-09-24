@@ -5,18 +5,22 @@ import { useProductDescription } from '../hooks/use-production-description';
 import { useApplicationContext, useCustomViewContext } from '@commercetools-frontend/application-shell-connectors';
 import { useUpdateProductDescription } from '../hooks/use-update-product-description';
 import { ContentNotification } from '@commercetools-uikit/notifications';
+import { usePublishProduct } from '../hooks/use-publish-product';
 export default function TinyEditor() {
     const context1 = useCustomViewContext();
-    const productId = context1.hostUrl.split("products/")[1]
-    // const hardcodedProductId = '9eb16815-46ae-4500-96b2-6a961bc61845';
+    // const productId = context1.hostUrl.split("products/")[1]
+    const hardcodedProductId = '9eb16815-46ae-4500-96b2-6a961bc61845';
     const context = useApplicationContext();
     const locale = context?.dataLocale || '';
-    const { productDescription, productVersion, loading, error } = useProductDescription(productId, locale);
+    const { productDescription, productVersion, loading, error } = useProductDescription(hardcodedProductId, locale);
     const { updateDescription, loading: updating, error: updateError } = useUpdateProductDescription(); 
-
+    const { publish, loading: publishLoading, error: publishError } = usePublishProduct();  // Use the publish hook
+    console.log("===",publishError)
     const [editorContent, setEditorContent] = useState('');
     const [showSuccessNotification, setShowSuccessNotification] = useState(false);  
     const [showErrorNotification, setShowErrorNotification] = useState(false); 
+    const [showPublishSuccess, setShowPublishSuccess] = useState(false);  // Publish success notification
+    const [showPublishError, setShowPublishError] = useState(false);      // Publish error notification
 
 
     useEffect(() => {
@@ -34,7 +38,7 @@ export default function TinyEditor() {
     const handleSave = async () => {
         if (productVersion !== undefined) {  
             try {
-                await updateDescription(productId, productVersion, locale, editorContent);  
+                await updateDescription(hardcodedProductId, productVersion, locale, editorContent);  
                 setShowSuccessNotification(true);
                 setShowErrorNotification(false);  
             } catch (err) {
@@ -48,9 +52,27 @@ export default function TinyEditor() {
             setShowSuccessNotification(false);
         }
     };
+    const handlePublish = async () => {
+        if (productVersion !== undefined) {
+            try {
+                const result = await publish(hardcodedProductId, productVersion);  // Call publish mutation
+                console.log("Publish result:", result);  // Log the result for debugging
+                setShowPublishSuccess(true);
+                setShowPublishError(false);
+            } catch (err) {
+                console.error("Publish error:",err);  // Log the detailed error
+                setShowPublishError(true);
+                setShowPublishSuccess(false);
+            }
+        } else {
+            console.error('Product version is undefined.');
+            setShowPublishError(true);
+            setShowPublishSuccess(false);
+        }
+    };
 
-    if (loading || updating) return <div>Loading...</div>;
-    if (error || updateError) return <div>Error loading or updating product description</div>;
+    if (loading || updating || publishLoading) return <div>Loading...</div>;
+    if (error || updateError || publishError) return <div>Error loading, updating, or publishing product</div>;
 
     return (
         <>
@@ -72,6 +94,23 @@ export default function TinyEditor() {
                 </ContentNotification>
                 </div>
             )}
+            {/* Show success notification for publish */}
+            {showPublishSuccess && (
+                <div style={{ padding: "10px 0 10px 0" }}>
+                    <ContentNotification type="success" onRemove={() => setShowPublishSuccess(false)}>
+                        Product published successfully!
+                    </ContentNotification>
+                </div>
+            )}
+
+            {/* Show error notification for publish */}
+            {showPublishError && (
+                <div style={{ padding: "10px 0 10px 0" }}>
+                    <ContentNotification type="error" onRemove={() => setShowPublishError(false)}>
+                        Failed to publish product. Please try again.
+                    </ContentNotification>
+                </div>
+            )}
             <Editor
                 apiKey="ny5v4ltgkfef1txqx9nyhhb6q719gpwbkxrgc9ilxlu846d1"
                 init={{
@@ -90,6 +129,13 @@ export default function TinyEditor() {
             style={{marginTop:"10px"}}
                 label="Save"
                 onClick={handleSave}
+                isDisabled={false}
+            />
+
+            <PrimaryButton
+                style={{ marginTop: "10px", marginLeft: "10px" }}
+                label="Publish"
+                onClick={handlePublish}
                 isDisabled={false}
             />
             
