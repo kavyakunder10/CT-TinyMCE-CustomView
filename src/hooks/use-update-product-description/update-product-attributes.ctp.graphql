@@ -8,9 +8,12 @@ mutation UpdateProductAttributes(
     version
     masterData {
       current {
-        attributes {
-          name
-          value
+        allVariants {
+          id
+          attributesRaw {
+            name
+            value
+          }
         }
       }
     }

@@ -58,6 +58,7 @@ export const useUpdateProductDescription = () => {
       });
       return result.data.updateProduct;
     } catch (error) {
+      console.error('Error updating product description:', error);
       throw error;
     }
   };

@@ -6,7 +6,13 @@ const config = {
   cloudIdentifier: 'gcp-au',
   headers: {
     csp: {
-      'connect-src': ['self', 'http://localhost:3001', '*.tiny.cloud'],
+      'connect-src': [
+        'self',
+        'http://localhost:3001',
+        '*.tiny.cloud',
+        'https://api.australia-southeast1.gcp.commercetools.com', // Add this
+        '*.commercetools.com', // To cover all commercetools subdomains
+      ],
       'script-src': ['self', '*.tiny.cloud'],
       'style-src': [
         'self',
@@ -30,6 +36,11 @@ const config = {
       customViewId: '${env: CUSTOM_VIEW_ID}',
       url: '${env: CUSTOM_VIEW_URL}',
     },
+  },
+  additionalEnv: {
+    authUrl: '${env: CTP_AUTH_URL}',
+    apiUrl: '${env:CTP_API_URL}',
+    projectKey: '${env: CTP_PROJECT_KEY}',
   },
   locators: ['products.product_details.general'],
   oAuthScopes: {

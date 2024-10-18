@@ -1,52 +1,63 @@
 import { useMcQuery } from '@commercetools-frontend/application-shell';
 import { GRAPHQL_TARGETS } from '@commercetools-frontend/constants';
 import type { ApolloError } from '@apollo/client';
-import FetchProductDescriptionQuery from './fetch-product-description.ctp.graphql';
+import FetchProductDescriptionAndAttributesQuery from './fetch-product-description.ctp.graphql';
 
 // Define the type for the query result
-type TProductDescriptionQuery = {
+type TProductDescriptionAndAttributesQuery = {
   product: {
     id: string;
-    version: number; // Add the version field type
+    version: number;
     masterData: {
       current: {
         description: string;
+        allVariants: Array<{
+          id: string;
+          attributesRaw: Array<{ name: string; value: any }>;
+        }>;
       };
     };
   };
 };
 
 // Define the hook type
-type TUseProductDescription = (
+type TUseProductDescriptionAndAttributes = (
   productId: string,
   locale?: string
 ) => {
   productDescription?: string;
-  productVersion?: number; // Add productVersion type to the return object
+  productAttributes?: Array<{ name: string; value: any }>;
+  productVersion?: number;
   error?: ApolloError;
   loading: boolean;
 };
 
 // Create the hook
-export const useProductDescription: TUseProductDescription = (
-  productId,
-  locale = 'en'
-) => {
-  const { data, error, loading } = useMcQuery<TProductDescriptionQuery>(
-    FetchProductDescriptionQuery,
-    {
-      variables: { productId, locale }, // Use the productId passed as argument
-      context: {
-        target: GRAPHQL_TARGETS.COMMERCETOOLS_PLATFORM,
-      },
-    }
-  );
+export const useProductDescriptionAndAttributes: TUseProductDescriptionAndAttributes =
+  (productId, locale = 'en') => {
+    const { data, error, loading } =
+      useMcQuery<TProductDescriptionAndAttributesQuery>(
+        FetchProductDescriptionAndAttributesQuery,
+        {
+          variables: { productId, locale },
+          context: {
+            target: GRAPHQL_TARGETS.COMMERCETOOLS_PLATFORM,
+          },
+        }
+      );
 
-  // Return productDescription and productVersion
-  return {
-    productDescription: data?.product?.masterData?.current?.description || '',
-    productVersion: data?.product?.version, // Return product version here
-    error,
-    loading,
+    // Merge all attributes from all variants into one array
+    const productAttributes =
+      data?.product?.masterData?.current?.allVariants.flatMap(
+        (variant) => variant.attributesRaw
+      ) || [];
+
+    // Return productDescription, productAttributes, and productVersion
+    return {
+      productDescription: data?.product?.masterData?.current?.description || '',
+      productAttributes,
+      productVersion: data?.product?.version,
+      error,
+      loading,
+    };
   };
-};

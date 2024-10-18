@@ -1,147 +1,344 @@
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import PrimaryButton from '@commercetools-uikit/primary-button';
-import { useProductDescription } from '../hooks/use-production-description';
 import { useApplicationContext, useCustomViewContext } from '@commercetools-frontend/application-shell-connectors';
+import CheckboxInput from '@commercetools-uikit/checkbox-input';
+import axios from 'axios';
+import { useProductDescriptionAndAttributes } from '../hooks/use-production-description/use-product-description';
+import { fetchSelectedAttributes, saveSelectedAttributesToCustomObject } from '../utils/custom-object-service';
 import { useUpdateProductDescription } from '../hooks/use-update-product-description';
-import { ContentNotification } from '@commercetools-uikit/notifications';
+import { useUpdateProductAttributes } from '../hooks/use-update-product-description/use-update-product-attributes';
 import { usePublishProduct } from '../hooks/use-publish-product';
-export default function TinyEditor() {
-    const context1 = useCustomViewContext();
-    const productId = context1.hostUrl.split("products/")[1]
-    // const hardcodedProductId = '9eb16815-46ae-4500-96b2-6a961bc61845';
-    const context = useApplicationContext();
-    const locale = context?.dataLocale || '';
-    const { productDescription, productVersion, loading, error } = useProductDescription(productId, locale);
-    const { updateDescription, loading: updating, error: updateError } = useUpdateProductDescription(); 
-    const { publish, loading: publishLoading, error: publishError } = usePublishProduct();  // Use the publish hook
-    console.log("===",publishError)
-    const [editorContent, setEditorContent] = useState('');
-    const [showSuccessNotification, setShowSuccessNotification] = useState(false);  
-    const [showErrorNotification, setShowErrorNotification] = useState(false); 
-    const [showPublishSuccess, setShowPublishSuccess] = useState(false);  // Publish success notification
-    const [showPublishError, setShowPublishError] = useState(false);      // Publish error notification
 
+
+interface Attribute {
+    name: string;
+    type?: {  // Make 'type' optional
+        name: string;
+    };
+    label?: {  // Make 'label' optional
+        [key: string]: string;
+    };
+    value: any;
+    variantId?: number;
+}
+export default function TinyEditor() {
+    const authUrl = process.env.REACT_APP_COMMERCE_TOOLS_AUTH_URL;
+    const apiUrl = process.env.REACT_APP_COMMERCE_TOOLS_API_URL;
+
+    const context1 = useCustomViewContext();
+    // const productId = context1.hostUrl.split("products/")[1]
+    const hardcodedProductId = '9eb16815-46ae-4500-96b2-6a961bc61845';
+    const context = useApplicationContext();
+
+    const locale = context?.dataLocale || '';
+    const { productDescription, productAttributes, loading, error ,productVersion:version} =
+        useProductDescriptionAndAttributes(hardcodedProductId, locale);
+    const { updateDescription} = useUpdateProductDescription();
+    const { updateAttributes } = useUpdateProductAttributes();
+    const { publish } = usePublishProduct();
+    const [showSettings, setShowSettings] = useState(false);
+    const [selectedAttributes, setSelectedAttributes] = useState<{ [key: string]: boolean }>({});
+    const [attributeEditorContent, setAttributeEditorContent] = useState<{ [key: string]: string }>({});
+    const [descriptionContent, setDescriptionContent] = useState<string>('');  // For product description editor
+
+    const [attributes, setAttributes] = useState<Attribute[]>([]); 
+    const [latestVersion, setLatestVersion] = useState<number | undefined>(version);
 
     useEffect(() => {
-        if (productDescription) {
-            setEditorContent(productDescription);
+        // Only set initial value once, when productDescription is first loaded
+        if (productDescription && descriptionContent === '') {
+            setDescriptionContent(productDescription);  // Set initial description content only once
         }
     }, [productDescription]);
 
 
-    const handleEditorChange = (content: string) => {
-        setEditorContent(content);
+    useEffect(() => {
+        if (productAttributes && Object.keys(attributeEditorContent).length === 0) {
+            const initialContent = productAttributes.reduce((acc: { [key: string]: string }, attr: any) => {
+                if (!attributeEditorContent[attr.name]) { 
+                    acc[attr.name] = attr.value || ''; 
+                }
+                return acc;
+            }, {});
+            if (Object.keys(initialContent).length > 0) {
+                setAttributeEditorContent(prevState => ({
+                    ...prevState,
+                    ...initialContent, 
+                }));
+            }
+        }
+    }, [productAttributes, attributeEditorContent]);
+
+
+    useEffect(() => {
+        const authToken = localStorage.getItem('authToken');
+        if (authToken) {
+            fetchSelectedAttributes(authToken, hardcodedProductId)
+                .then(savedAttributes => setSelectedAttributes(savedAttributes))
+                .catch(error => console.error(error));
+        }
+    }, []);
+
+
+    useEffect(() => {
+        if (Object.keys(selectedAttributes).length > 0) {
+            const authToken = localStorage.getItem('authToken');
+            if (authToken) {
+                saveSelectedAttributesToCustomObject(authToken, hardcodedProductId, selectedAttributes)
+                    .then(() => console.log('Attributes saved successfully'))
+                    .catch(error => console.error(error));
+            }
+        }
+    }, [selectedAttributes]);
+
+    useEffect(() => {
+        setLatestVersion(version); // Sync version when it changes
+    }, [version]);
+
+    const handleCheckboxChange = (attributeName: string) => {
+        setSelectedAttributes((prev) => ({
+            ...prev,
+            [attributeName]: !prev[attributeName],
+        }));
     };
 
+    // Handle editor content change for each attribute
+    const handleEditorChange = (attributeName: string, content: string) => {
+        setAttributeEditorContent((prev) => ({
+            ...prev,
+            [attributeName]: content,
+        }));
+    };
 
+    // Handle editor content change for product description
+    const handleDescriptionChange = (content: any) => {
+        setDescriptionContent(content);  // Update state when editor content changes
+    };
+    
+    const getAuthToken = () => localStorage.getItem('authToken');
+
+    // Function to fetch the latest product version
+    const fetchLatestProductVersion = async () => {
+        try {
+            const authToken = getAuthToken();
+            const response = await axios.get(`https://api.australia-southeast1.gcp.commercetools.com/tiny_mc_demo/products/${hardcodedProductId}`, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                },
+            });
+            const latestVersion = response.data.version; // Assuming the version is in the response data
+            console.log("latestversion",latestVersion)
+            setLatestVersion(latestVersion);
+            return latestVersion;
+        } catch (error) {
+            console.error('Error fetching latest product version:', error);
+        }
+    };
+
+    const delay = (ms:number) => new Promise(resolve => setTimeout(resolve, ms));
     const handleSave = async () => {
-        if (productVersion !== undefined) {  
-            try {
-                await updateDescription(productId, productVersion, locale, editorContent);  
-                setShowSuccessNotification(true);
-                setShowErrorNotification(false);  
-            } catch (err) {
-                console.error(err);
-                setShowErrorNotification(true); 
-                setShowSuccessNotification(false);
-            }
-        } else {
-            console.error('Product version is undefined.');
-            setShowErrorNotification(true);
-            setShowSuccessNotification(false);
+        const defaultVariantId = 1;
+
+        // Collect updated attributes
+        const updatedAttributes = Object.keys(selectedAttributes)
+            .filter((key) => selectedAttributes[key])
+            .map((key) => ({
+                name: key,
+                value: attributeEditorContent[key],
+                variantId: defaultVariantId,
+            }));
+
+        if (!latestVersion) {
+            console.error('Product version is undefined');
+            return;
         }
-    };
-    const handlePublish = async () => {
-        if (productVersion !== undefined) {
-            try {
-                const result = await publish(productId, productVersion);  // Call publish mutation
-                console.log("Publish result:", result);  // Log the result for debugging
-                setShowPublishSuccess(true);
-                setShowPublishError(false);
-                setTimeout(() => {
-                    window.parent.location.reload();  
-                }, 1000);
-            } catch (err) {
-                console.error("Publish error:",err);  // Log the detailed error
-                setShowPublishError(true);
-                setShowPublishSuccess(false);
+
+        try {
+            // 1. Update product description
+            if (descriptionContent) {
+                await updateDescription(hardcodedProductId, latestVersion, locale, descriptionContent);
+                console.log('Description updated successfully');
+                // Fetch latest version after updating description
+                const newVersion = await fetchLatestProductVersion();
+                setLatestVersion(newVersion); // Update latest version after the first update
             }
-        } else {
-            console.error('Product version is undefined.');
-            setShowPublishError(true);
-            setShowPublishSuccess(false);
+
+            // 2. Update product attributes
+            if (updatedAttributes.length > 0) {
+                for (const attribute of updatedAttributes) {
+                    // Fetch the latest version before updating each attribute
+                    const latestVersionBeforeUpdate = await fetchLatestProductVersion();
+                    console.log('Updating attribute:', attribute.name, 'with version:', latestVersionBeforeUpdate);
+                    await updateAttributes(hardcodedProductId, latestVersionBeforeUpdate, [attribute]);
+                    await delay(1000); // Delay for rate-limiting or ensuring the update is processed
+                }
+
+                // Fetch the latest version after all attribute updates
+                const finalVersion = await fetchLatestProductVersion();
+                setLatestVersion(finalVersion);
+            }
+
+            const latestVersionForPublish = await fetchLatestProductVersion(); // Ensure you fetch the latest version for publish
+            console.log('Publishing with version:', latestVersionForPublish);
+            await publish(hardcodedProductId, latestVersionForPublish);
+            console.log('Product description and attributes updated and published successfully');
+        } catch (error) {
+            console.error('Error updating product attributes:', error);
         }
     };
 
-    if (loading || updating || publishLoading) return <div>Loading...</div>;
-    if (error || updateError || publishError) return <div>Error loading, updating, or publishing product</div>;
+  
+    useEffect(() => {
+        const fetchAuthToken = async () => {
+            try {
+                const clientId = 'RojGwWt0ia3-uNEs5fOJdPCX';  // Replace with your actual client ID
+                const clientSecret = 'lDwpeBFUe3u_CscZ1ZUD34pEvHFw8X2O';  // Replace with your actual client secret
+
+                const response = await axios.post(
+                    'https://auth.australia-southeast1.gcp.commercetools.com/oauth/token?grant_type=client_credentials',
+                    new URLSearchParams({
+                        'grant_type': 'client_credentials',
+                    }),
+                    {
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+                        }
+                    }
+                );
+                const accessToken = response.data.access_token;
+                localStorage.setItem('authToken', accessToken);
+
+            } catch (error) {
+                console.error('Error fetching auth token:', error);
+            }
+        };
+
+        fetchAuthToken();
+    }, []);
+    useEffect(() => {
+        const fetchProductAttributes = async () => {
+            try {
+                // Retrieve token from localStorage
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    console.error('No token found in localStorage.');
+                    return;
+                }
+
+                // Make the GET request to fetch product types
+                const response = await axios.get(
+                    'https://api.australia-southeast1.gcp.commercetools.com/tiny_mc_demo/product-types/key=main',
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`,  // Pass token here
+                        },
+                    }
+                );
+
+                setAttributes(response.data.attributes);
+            } catch (error) {
+                console.error('Error fetching product types:', error);
+            }
+        };
+
+        fetchProductAttributes();
+    }, []);  // Empty dependency array to only call this on component mount
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error loading product attributes...</div>;
 
     return (
         <>
-            <h4 style={{marginBottom:"10px"}}>Product Description</h4>
-            {/* Show success notification */}
-            {showSuccessNotification && (
-                <div style={{padding:"10px 0 10px 0"}}>
-                <ContentNotification  type="success" onRemove={() => setShowSuccessNotification(false)}>
-                    Product description updated successfully!
-                </ContentNotification>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: "10px" }}>                {/* Settings Label */}
+                <button
+                    style={{
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        color: '#007bff',
+                        cursor: 'pointer',
+                        fontSize: '16px'
+                    }}
+                    onClick={() => setShowSettings(!showSettings)} // Toggle Settings display
+                >
+                    {showSettings ? "Click again to edit" : "Settings"}
+                </button>
+            </div>
+            {/* Show dummy content when settings is clicked */}
+            {showSettings && (
+                <div style={{ marginTop: '20px', padding: '10px' }}>
+                    <h4 style={{ marginBottom: "20px" }}>Please select attributes which you want to Edit</h4>
+
+                    {/* Map over the attributes array and filter for type.name === "text" */}
+                    {attributes
+                        .filter((attribute) => attribute?.type?.name === 'text')  // Use optional chaining for 'type'
+                        .map((attribute) => (
+                            <CheckboxInput
+                                key={attribute.name}
+                                value={attribute.name}  // Use attribute name as value
+                                onChange={() => handleCheckboxChange(attribute.name)}
+                                isChecked={selectedAttributes[attribute.name] || false}
+                            >
+                                {attribute?.label?.[locale] || attribute?.label?.['en'] || attribute.name}  {/* Safely access label with fallback */}
+                            </CheckboxInput>
+                        ))
+                    }
                 </div>
             )}
 
-            {/* Show error notification */}
-            {showErrorNotification && (
-                <div style={{ padding:"10px 0 10px 0"}}>
-                <ContentNotification type="error" onRemove={() => setShowErrorNotification(false)}>
-                    Failed to update product description. Please try again.
-                </ContentNotification>
-                </div>
-            )}
-            {/* Show success notification for publish */}
-            {showPublishSuccess && (
-                <div style={{ padding: "10px 0 10px 0" }}>
-                    <ContentNotification type="success" onRemove={() => setShowPublishSuccess(false)}>
-                        Product published successfully!
-                    </ContentNotification>
-                </div>
-            )}
+            {!showSettings && <small style={{ marginBottom: "30px", color: "red" }}>Note:To Edit values for Product Attributes select the attributes from settings</small>}
+            {!showSettings && <div>
+                <h3 style={{ margin: "20px 0 20px 0" }}>Product Description</h3>
+                <Editor
+                    apiKey="wfuimxom2tl3bzeesblvkd2cqt9psx48srxnofonkgw38n4k"
+                    init={{
+                        plugins: [
+                            'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
+                            'checklist', 'mediaembed', 'casechange', 'export', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'editimage', 'advtemplate', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown',
+                        ],
+                        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+                        tinycomments_mode: 'embedded',
+                        tinycomments_author: 'Author name',
+                    }}
+                    value={descriptionContent}  // Controlled value prop
+                    onEditorChange={handleDescriptionChange}  // Update state when content changes
+                />
+            </div>}
+            {/* Render TinyMCE Editors for each selected attribute */}
+            {!showSettings && Object.keys(selectedAttributes)
+                .filter((key) => selectedAttributes[key])
+                .map((attributeName) => {
+                    return (
+                    <div key={attributeName}>
+                        <h4 style={{ margin: "20px 0 20px 0" }}>{attributeName}</h4>
+                        <Editor
+                            apiKey="wfuimxom2tl3bzeesblvkd2cqt9psx48srxnofonkgw38n4k"
+                            init={{
+                                plugins: [
+                                    'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
+                                    'checklist', 'mediaembed', 'casechange', 'export', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'editimage', 'advtemplate', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown',
+                                ],
+                                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+                                tinycomments_mode: 'embedded',
+                                tinycomments_author: 'Author name',
+                            }}
+                            value={attributeEditorContent[attributeName] || ''}
+                            initialValue={productAttributes?.find(attr => attr.name === attributeName)?.value || ''}
+                            onEditorChange={(content) => handleEditorChange(attributeName, content)}
+                        />
+                    </div>
+                )})}
 
-            {/* Show error notification for publish */}
-            {showPublishError && (
-                <div style={{ padding: "10px 0 10px 0" }}>
-                    <ContentNotification type="error" onRemove={() => setShowPublishError(false)}>
-                        Failed to publish product. Please try again.
-                    </ContentNotification>
-                </div>
-            )}
-            <Editor
-                apiKey="ny5v4ltgkfef1txqx9nyhhb6q719gpwbkxrgc9ilxlu846d1"
-                init={{
-                    plugins: [
-                        'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
-                        'checklist', 'mediaembed', 'casechange', 'export', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'editimage', 'advtemplate', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown',
-                    ],
-                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-                    tinycomments_mode: 'embedded',
-                    tinycomments_author: 'Author name',
-                }}
-                value={editorContent}
-                onEditorChange={handleEditorChange}
-            />
-            <PrimaryButton
-            style={{marginTop:"10px"}}
-                label="Save"
-                onClick={handleSave}
-                isDisabled={false}
-            />
 
-            <PrimaryButton
-                style={{ marginTop: "10px", marginLeft: "10px", backgroundColor:"green" }}
-                label={showPublishSuccess?"Published":"Publish"}
-                onClick={handlePublish}
-                isDisabled={false}
-            />
-            
+            {!showSettings && <div>
+                <PrimaryButton
+                    style={{ marginTop: "10px" }}
+                    label="Save and Publish"
+                    onClick={handleSave}
+                    isDisabled={false}
+                />
+            </div>}
         </>
     );
 }

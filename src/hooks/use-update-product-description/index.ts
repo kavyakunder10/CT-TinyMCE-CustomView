@@ -1,1 +1,1 @@
-export { useUpdateProductDescription } from './use-update-product-description';
+export * from './use-update-product-description';
