@@ -23,17 +23,16 @@ interface Attribute {
     variantId?: number;
 }
 export default function TinyEditor() {
-    const authUrl = process.env.REACT_APP_COMMERCE_TOOLS_AUTH_URL;
-    const apiUrl = process.env.REACT_APP_COMMERCE_TOOLS_API_URL;
+
 
     const context1 = useCustomViewContext();
-    // const productId = context1.hostUrl.split("products/")[1]
-    const hardcodedProductId = '9eb16815-46ae-4500-96b2-6a961bc61845';
+    const productId = context1.hostUrl.split("products/")[1]
+    // const productId = '9eb16815-46ae-4500-96b2-6a961bc61845';
     const context = useApplicationContext();
 
     const locale = context?.dataLocale || '';
     const { productDescription, productAttributes, loading, error ,productVersion:version} =
-        useProductDescriptionAndAttributes(hardcodedProductId, locale);
+        useProductDescriptionAndAttributes(productId, locale);
     const { updateDescription} = useUpdateProductDescription();
     const { updateAttributes } = useUpdateProductAttributes();
     const { publish } = usePublishProduct();
@@ -74,7 +73,7 @@ export default function TinyEditor() {
     useEffect(() => {
         const authToken = localStorage.getItem('authToken');
         if (authToken) {
-            fetchSelectedAttributes(authToken, hardcodedProductId)
+            fetchSelectedAttributes(authToken, productId)
                 .then(savedAttributes => setSelectedAttributes(savedAttributes))
                 .catch(error => console.error(error));
         }
@@ -85,7 +84,7 @@ export default function TinyEditor() {
         if (Object.keys(selectedAttributes).length > 0) {
             const authToken = localStorage.getItem('authToken');
             if (authToken) {
-                saveSelectedAttributesToCustomObject(authToken, hardcodedProductId, selectedAttributes)
+                saveSelectedAttributesToCustomObject(authToken, productId, selectedAttributes)
                     .then(() => console.log('Attributes saved successfully'))
                     .catch(error => console.error(error));
             }
@@ -122,7 +121,7 @@ export default function TinyEditor() {
     const fetchLatestProductVersion = async () => {
         try {
             const authToken = getAuthToken();
-            const response = await axios.get(`https://api.australia-southeast1.gcp.commercetools.com/tiny_mc_demo/products/${hardcodedProductId}`, {
+            const response = await axios.get(`https://api.australia-southeast1.gcp.commercetools.com/tiny_mc_demo/products/${productId}`, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
                 },
@@ -157,7 +156,7 @@ export default function TinyEditor() {
         try {
             // 1. Update product description
             if (descriptionContent) {
-                await updateDescription(hardcodedProductId, latestVersion, locale, descriptionContent);
+                await updateDescription(productId, latestVersion, locale, descriptionContent);
                 console.log('Description updated successfully');
                 // Fetch latest version after updating description
                 const newVersion = await fetchLatestProductVersion();
@@ -170,7 +169,7 @@ export default function TinyEditor() {
                     // Fetch the latest version before updating each attribute
                     const latestVersionBeforeUpdate = await fetchLatestProductVersion();
                     console.log('Updating attribute:', attribute.name, 'with version:', latestVersionBeforeUpdate);
-                    await updateAttributes(hardcodedProductId, latestVersionBeforeUpdate, [attribute]);
+                    await updateAttributes(productId, latestVersionBeforeUpdate, [attribute]);
                     await delay(1000); // Delay for rate-limiting or ensuring the update is processed
                 }
 
@@ -181,7 +180,7 @@ export default function TinyEditor() {
 
             const latestVersionForPublish = await fetchLatestProductVersion(); // Ensure you fetch the latest version for publish
             console.log('Publishing with version:', latestVersionForPublish);
-            await publish(hardcodedProductId, latestVersionForPublish);
+            await publish(productId, latestVersionForPublish);
             console.log('Product description and attributes updated and published successfully');
         } catch (error) {
             console.error('Error updating product attributes:', error);
