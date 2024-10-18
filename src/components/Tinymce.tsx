@@ -35,8 +35,8 @@ export default function TinyEditor() {
 
 
     const context1 = useCustomViewContext();
-    // const productId = context1.hostUrl.split("products/")[1]
-    const productId = '9eb16815-46ae-4500-96b2-6a961bc61845';
+    const productId = context1.hostUrl.split("products/")[1]
+    // const productId = '9eb16815-46ae-4500-96b2-6a961bc61845';
     const context = useApplicationContext();
     console.log(context)
     const API_URL = useApplicationContext(
