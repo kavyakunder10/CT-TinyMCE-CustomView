@@ -38,7 +38,6 @@ export default function TinyEditor() {
     const productId = context1.hostUrl.split("products/")[1]
     // const productId = '9eb16815-46ae-4500-96b2-6a961bc61845';
     const context = useApplicationContext();
-    console.log(context)
     const API_URL = useApplicationContext(
         (context) => (context.environment as unknown as CustomApplicationRuntimeEnvironment).apiUrl
     );
@@ -55,7 +54,7 @@ export default function TinyEditor() {
         (context) => (context.environment as unknown as CustomApplicationRuntimeEnvironment).clientSecret
     );
 
-    console.log(API_URL,PROJECT_KEY,AUTH_URL)
+
     const locale = context?.dataLocale || '';
     const { productDescription, productAttributes, loading, error ,productVersion:version} =
         useProductDescriptionAndAttributes(productId, locale);
@@ -154,7 +153,7 @@ export default function TinyEditor() {
                 },
             });
             const latestVersion = response.data.version; // Assuming the version is in the response data
-            console.log("latestversion",latestVersion)
+
             setLatestVersion(latestVersion);
             return latestVersion;
         } catch (error) {
@@ -195,7 +194,7 @@ export default function TinyEditor() {
                 for (const attribute of updatedAttributes) {
                     // Fetch the latest version before updating each attribute
                     const latestVersionBeforeUpdate = await fetchLatestProductVersion();
-                    console.log('Updating attribute:', attribute.name, 'with version:', latestVersionBeforeUpdate);
+
                     await updateAttributes(productId, latestVersionBeforeUpdate, [attribute]);
                     await delay(1000); // Delay for rate-limiting or ensuring the update is processed
                 }
@@ -206,7 +205,7 @@ export default function TinyEditor() {
             }
 
             const latestVersionForPublish = await fetchLatestProductVersion(); // Ensure you fetch the latest version for publish
-            console.log('Publishing with version:', latestVersionForPublish);
+
             await publish(productId, latestVersionForPublish);
             console.log('Product description and attributes updated and published successfully');
             setSuccessMessage(true);
