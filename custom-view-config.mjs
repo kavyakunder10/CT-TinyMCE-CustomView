@@ -41,6 +41,8 @@ const config = {
     authUrl: '${env: CTP_AUTH_URL}',
     apiUrl: '${env:CTP_API_URL}',
     projectKey: '${env: CTP_PROJECT_KEY}',
+    clientId: '${env: CTP_CLIENT_ID}',
+    clientSecret: '${env: CTP_CLIENT_SECRET}',
   },
   locators: ['products.product_details.general'],
   oAuthScopes: {

@@ -23,14 +23,39 @@ interface Attribute {
     value: any;
     variantId?: number;
 }
+interface CustomApplicationRuntimeEnvironment {
+    apiUrl: string;
+    projectKey:string;
+    authUrl:string
+    clientId:string
+    clientSecret:string
+}
+
 export default function TinyEditor() {
 
 
     const context1 = useCustomViewContext();
-    const productId = context1.hostUrl.split("products/")[1]
-    // const productId = '9eb16815-46ae-4500-96b2-6a961bc61845';
+    // const productId = context1.hostUrl.split("products/")[1]
+    const productId = '9eb16815-46ae-4500-96b2-6a961bc61845';
     const context = useApplicationContext();
+    console.log(context)
+    const API_URL = useApplicationContext(
+        (context) => (context.environment as unknown as CustomApplicationRuntimeEnvironment).apiUrl
+    );
+    const PROJECT_KEY = useApplicationContext(
+        (context) => (context.environment as unknown as CustomApplicationRuntimeEnvironment).projectKey
+    );
+    const AUTH_URL = useApplicationContext(
+        (context) => (context.environment as unknown as CustomApplicationRuntimeEnvironment).authUrl
+    );
+    const CLIENT_ID = useApplicationContext(
+        (context) => (context.environment as unknown as CustomApplicationRuntimeEnvironment).clientId
+    );
+    const SECRET_ID = useApplicationContext(
+        (context) => (context.environment as unknown as CustomApplicationRuntimeEnvironment).clientSecret
+    );
 
+    console.log(API_URL,PROJECT_KEY,AUTH_URL)
     const locale = context?.dataLocale || '';
     const { productDescription, productAttributes, loading, error ,productVersion:version} =
         useProductDescriptionAndAttributes(productId, locale);
@@ -123,7 +148,7 @@ export default function TinyEditor() {
     const fetchLatestProductVersion = async () => {
         try {
             const authToken = getAuthToken();
-            const response = await axios.get(`https://api.australia-southeast1.gcp.commercetools.com/tiny_mc_demo/products/${productId}`, {
+            const response = await axios.get(`${API_URL}/${PROJECT_KEY}/products/${productId}`, {
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
                 },
@@ -194,11 +219,11 @@ export default function TinyEditor() {
     useEffect(() => {
         const fetchAuthToken = async () => {
             try {
-                const clientId = 'RojGwWt0ia3-uNEs5fOJdPCX';  // Replace with your actual client ID
-                const clientSecret = 'lDwpeBFUe3u_CscZ1ZUD34pEvHFw8X2O';  // Replace with your actual client secret
+                const clientId = `${CLIENT_ID}`;  // Replace with your actual client ID
+                const clientSecret = `${SECRET_ID}`;  // Replace with your actual client secret
 
                 const response = await axios.post(
-                    'https://auth.australia-southeast1.gcp.commercetools.com/oauth/token?grant_type=client_credentials',
+                    `${AUTH_URL}/oauth/token?grant_type=client_credentials`,
                     new URLSearchParams({
                         'grant_type': 'client_credentials',
                     }),
@@ -231,7 +256,7 @@ export default function TinyEditor() {
 
                 // Make the GET request to fetch product types
                 const response = await axios.get(
-                    'https://api.australia-southeast1.gcp.commercetools.com/tiny_mc_demo/product-types/key=main',
+                    `${API_URL}/${PROJECT_KEY}/product-types/key=main`,
                     {
                         headers: {
                             'Authorization': `Bearer ${authToken}`,  // Pass token here
