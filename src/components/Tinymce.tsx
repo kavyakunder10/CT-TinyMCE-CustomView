@@ -9,6 +9,7 @@ import { fetchSelectedAttributes, saveSelectedAttributesToCustomObject } from '.
 import { useUpdateProductDescription } from '../hooks/use-update-product-description';
 import { useUpdateProductAttributes } from '../hooks/use-update-product-description/use-update-product-attributes';
 import { usePublishProduct } from '../hooks/use-publish-product';
+import { ContentNotification } from '@commercetools-uikit/notifications';
 
 
 interface Attribute {
@@ -43,6 +44,7 @@ export default function TinyEditor() {
 
     const [attributes, setAttributes] = useState<Attribute[]>([]); 
     const [latestVersion, setLatestVersion] = useState<number | undefined>(version);
+    const [succesMessage,setSuccessMessage]=useState(false)
 
     useEffect(() => {
         // Only set initial value once, when productDescription is first loaded
@@ -182,6 +184,7 @@ export default function TinyEditor() {
             console.log('Publishing with version:', latestVersionForPublish);
             await publish(productId, latestVersionForPublish);
             console.log('Product description and attributes updated and published successfully');
+            setSuccessMessage(true);
         } catch (error) {
             console.error('Error updating product attributes:', error);
         }
@@ -250,6 +253,9 @@ export default function TinyEditor() {
 
     return (
         <>
+          {succesMessage &&  <ContentNotification onRemove={()=>{setSuccessMessage(false)}} type="success">
+                Description and Attributes Updated Successfully!
+            </ContentNotification>}
             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: "10px" }}>                {/* Settings Label */}
                 <button
                     style={{
