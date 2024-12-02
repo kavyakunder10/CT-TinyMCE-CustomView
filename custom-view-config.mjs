@@ -30,7 +30,7 @@ const config = {
   },
   env: {
     development: {
-      initialProjectKey: 'tiny_mc_demo',
+      initialProjectKey: '${env:CTP_PROJECT_KEY}',
     },
     production: {
       customViewId: '${env: CUSTOM_VIEW_ID}',
